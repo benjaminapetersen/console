@@ -2,6 +2,8 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import * as _ from 'lodash-es';
 
+import { PodMetricsModel } from '../models';
+import { k8sGet } from '../module/k8s';
 import { getVolumeType, getVolumeLocation, getVolumeMountPermissions, getVolumeMountsByPermissions, getRestartPolicyLabel, podPhase, podPhaseFilterReducer, podReadiness } from '../module/k8s/pods';
 import { getContainerState, getContainerStatus } from '../module/k8s/docker';
 import { ResourceEventStream } from './events';
@@ -269,26 +271,51 @@ const PodExecLoader = ({obj}) => <div className="co-m-pane__body">
 
 
 /** @type {React.SFC<any>} */
-export const PodsDetailsPage = props => <DetailsPage
-  {...props}
-  breadcrumbsFor={obj => breadcrumbsForOwnerRefs(obj).concat({
-    name: 'Pod Details',
-    path: props.match.url,
-  })}
-  menuActions={menuActions}
-  pages={[
-    navFactory.details(Details),
-    navFactory.editYaml(),
-    navFactory.envEditor(environmentComponent),
-    navFactory.logs(PodLogs),
-    navFactory.events(ResourceEventStream),
-    {
-      href: 'terminal',
-      name: 'Terminal',
-      component: PodExecLoader,
-    },
-  ]}
-/>;
+export const PodsDetailsPage = props => {
+  console.log('PodsDetailsPage.....');
+  console.log(props);
+
+  // TODO: put this in componentDidMount...
+  // but also, should just create a <SnapshotMetrics resource="">
+  // and add a flag in features.jsx
+  // and only render if the flag is true
+  //
+  k8sGet(
+    PodMetricsModel,
+    null,
+    props.namespace,
+    {queryParams: { }}
+  )
+    .then((stuff) => {
+      console.log('stuff?');
+      console.log(stuff);
+    }, (error) => {
+      console.log('error!');
+      console.log(error);
+    });
+
+
+  return <DetailsPage
+    {...props}
+    breadcrumbsFor={obj => breadcrumbsForOwnerRefs(obj).concat({
+      name: 'Pod Details',
+      path: props.match.url,
+    })}
+    menuActions={menuActions}
+    pages={[
+      navFactory.details(Details),
+      navFactory.editYaml(),
+      navFactory.envEditor(environmentComponent),
+      navFactory.logs(PodLogs),
+      navFactory.events(ResourceEventStream),
+      {
+        href: 'terminal',
+        name: 'Terminal',
+        component: PodExecLoader,
+      },
+    ]}
+  />;
+};
 PodsDetailsPage.displayName = 'PodsDetailsPage';
 
 export const PodList = props => <List {...props} Header={PodHeader} Row={PodRow} />;

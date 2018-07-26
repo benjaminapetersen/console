@@ -68,6 +68,30 @@ export const EtcdClusterModel: K8sKind = {
   propagationPolicy : 'Foreground',
 };
 
+export const PodMetricsModel: K8sKind = {
+  kind: 'PodMetrics',
+  label: 'Pod Metrics',
+  labelPlural: 'Pod Metrics',
+  apiGroup: 'metrics.k8s.io',
+  apiVersion: 'v1beta1',
+  path: 'pods',
+  plural: 'pods',
+  abbr: 'PM',
+  namespaced: true,
+};
+
+export const NodeMetricsModel: K8sKind = {
+  kind: 'NodeMetrics',
+  label: 'Node Metrics',
+  labelPlural: 'Node Metrics',
+  apiGroup: 'metrics.k8s.io',
+  apiVersion: 'v1beta1',
+  path: 'nodes',
+  plural: 'nodes',
+  abbr: 'NM',
+  namespaced: false,
+};
+
 export const PrometheusModel: K8sKind = {
   kind: 'Prometheus',
   label: 'Prometheus',
