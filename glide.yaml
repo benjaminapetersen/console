@@ -52,3 +52,7 @@ import:
 # Dependencies for YAML pararsing
 - package: gopkg.in/yaml.v2
   version: v2.2.1
+
+# imporve our http logging
+- package: https://github.com/motemen/go-loghttp
+  version: master

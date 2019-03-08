@@ -1,5 +1,5 @@
-hash: 5b04f39ec1744e13afe09352201ffd09aa45396e0bcd673db06fb777f092173e
-updated: 2018-05-17T13:34:32.404729-04:00
+hash: 190967ba77c8e7564344a948c736a1cc590f2fd2cf9b49946925619190d6009b
+updated: 2019-03-08T13:45:59.360447-05:00
 imports:
 - name: github.com/coreos/dex
   version: 6e50c18458842b8eec2f5219e3588fec918d5663
@@ -9,6 +9,10 @@ imports:
   - connector/ldap
 - name: github.com/coreos/go-oidc
   version: 065b426bd41667456c1a924468f507673629c46b
+- name: github.com/coreos/go-systemd
+  version: 48702e0da86bd25e76cfef347e2adeb434a0d0a6
+  subpackages:
+  - journal
 - name: github.com/coreos/pkg
   version: 7373797ee9cd9f7bcfa6a19632c2f66a1183ebb3
   subpackages:
@@ -19,10 +23,9 @@ imports:
   - netutil
   - timeutil
 - name: github.com/golang/protobuf
-  version: 874264fbbb43f4d91e999fecb4b40143ed611400
+  version: b4deda0973fb4c70b50d226b1af49f3da59f5265
   subpackages:
   - proto
-  - protoc-gen-go
 - name: github.com/gorilla/websocket
   version: 4ac909741dfa57448bfadfdbca0cf7eeaa68f0e2
 - name: github.com/jonboulle/clockwork
@@ -32,19 +35,26 @@ imports:
   subpackages:
   - diff
   - pretty
+- name: github.com/motemen/go-loghttp
+  version: 974ac5ceac271576caabe1c0bddf2b7eed471f67
+  subpackages:
+  - global
+- name: github.com/motemen/go-nuts
+  version: 42c35bdb11c20ff50bb14ef05750e8dcdfc75ea5
+  subpackages:
+  - roundtime
 - name: github.com/pquerna/cachecontrol
   version: c97913dcbd76de40b051a9b4cd827f7eaeb7a868
   subpackages:
   - cacheobject
-- name: github.com/Sirupsen/logrus
-  version: d26492970760ca5d33129d2d799e34be5c4782eb
 - name: golang.org/x/net
-  version: 6a513affb38dc9788b449d59ffed099b8de18fa0
+  version: 0ed95abb35c445290478a5348a7b38bb154135fd
   subpackages:
   - context
   - context/ctxhttp
   - http2
   - http2/hpack
+  - idna
   - internal/timeseries
   - lex/httplex
   - trace
@@ -52,12 +62,15 @@ imports:
   version: 921ae394b9430ed4fb549668d7b087601bd60a81
   subpackages:
   - internal
-- name: golang.org/x/sys
-  version: 833a04a10549a95dc34458c195cbad61bbb6cb4d
+- name: golang.org/x/text
+  version: b19bf474d317b857955b12035d2c5acb57ce8b01
   subpackages:
-  - unix
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
 - name: google.golang.org/appengine
-  version: 267c27e7492265b84fc6719503b14a1e17975d79
+  version: 54a98f90d1c46b7731eb8fb305d2a321c30ef610
   subpackages:
   - internal
   - internal/base
