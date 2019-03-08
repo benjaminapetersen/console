@@ -18,6 +18,9 @@ import (
 	"github.com/openshift/console/auth"
 	"github.com/openshift/console/pkg/proxy"
 	"github.com/openshift/console/server"
+	
+	// log a ton!
+	_ "github.com/motemen/go-loghttp/global"
 )
 
 var (
@@ -172,8 +175,11 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Cannot provide both --kubectl-client-secret and --kubectrl-client-secret-file")
 		os.Exit(1)
 	}
-
-	capnslog.SetGlobalLogLevel(capnslog.INFO)
+	// we need better logs.
+	// --log-level=<package>=VALUE
+	//   why package? no idea. we just want them all....
+	// a lot of them.  --log-level=*=TRACE
+	capnslog.SetGlobalLogLevel(capnslog.TRACE)
 	if *fLogLevel != "" {
 		llc, err := rl.ParseLogLevelConfig(*fLogLevel)
 		if err != nil {

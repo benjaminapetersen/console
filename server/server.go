@@ -17,6 +17,9 @@ import (
 	"github.com/openshift/console/auth"
 	"github.com/openshift/console/pkg/proxy"
 	"github.com/openshift/console/version"
+
+	// log a ton!
+	_ "github.com/motemen/go-loghttp/global"
 )
 
 const (

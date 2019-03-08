@@ -8,6 +8,10 @@ import (
 	"strings"
 
 	"github.com/openshift/console/auth"
+
+
+	// log a ton!
+	_ "github.com/motemen/go-loghttp/global"
 )
 
 // Middleware generates a middleware wrapper for request hanlders.
