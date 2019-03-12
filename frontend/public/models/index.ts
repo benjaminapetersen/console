@@ -948,7 +948,6 @@ export const OAuthModel: K8sKind = {
   crd: true,
 };
 
-
 export const ConsoleLinkModel: K8sKind = {
   label: 'Console Link',
   labelPlural: 'Console Links',
@@ -974,5 +973,19 @@ export const ConsoleCLIDownloadModel: K8sKind = {
   namespaced: false,
   kind: 'ConsoleCLIDownload',
   id: 'consoleclidownload',
+  crd: true,
+};
+
+export const ConsoleNotificationModel: K8sKind = {
+  label: 'Console Notification',
+  labelPlural: 'Console Notifications',
+  apiVersion: 'v1',
+  path: 'consolenotifications',
+  apiGroup: 'console.openshift.io',
+  plural: 'consolenotifications',
+  abbr: 'CN',
+  namespaced: false,
+  kind: 'ConsoleNotification',
+  id: 'consolenotification',
   crd: true,
 };
