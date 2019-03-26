@@ -947,3 +947,17 @@ export const OAuthModel: K8sKind = {
   id: 'oauth',
   crd: true,
 };
+
+export const ConsoleLinkModel: K8sKind = {
+  label: 'Console Link',
+  labelPlural: 'Console Links',
+  apiVersion: 'v1',
+  path: 'consolelink',
+  apiGroup: 'console.openshift.io',
+  plural: 'consolelinks',
+  abbr: 'CL',
+  namespaced: false,
+  kind: 'ConsoleLink',
+  id: 'consolelink',
+  crd: true,
+};
