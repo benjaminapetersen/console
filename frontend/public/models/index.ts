@@ -948,6 +948,7 @@ export const OAuthModel: K8sKind = {
   crd: true,
 };
 
+
 export const ConsoleLinkModel: K8sKind = {
   label: 'Console Link',
   labelPlural: 'Console Links',
@@ -959,5 +960,19 @@ export const ConsoleLinkModel: K8sKind = {
   namespaced: false,
   kind: 'ConsoleLink',
   id: 'consolelink',
+  crd: true,
+};
+
+export const ConsoleCLIDownloadModel: K8sKind = {
+  label: 'Console CLI Download',
+  labelPlural: 'Console CLI Downloads',
+  apiVersion: 'v1',
+  path: 'consoleclidownloads',
+  apiGroup: 'console.openshift.io',
+  plural: 'consoleclidownloads',
+  abbr: 'CCD',
+  namespaced: false,
+  kind: 'ConsoleCLIDownload',
+  id: 'consoleclidownload',
   crd: true,
 };
