@@ -90,6 +90,10 @@ type Server struct {
 	PrometheusTenancyProxyConfig *proxy.Config
 	AlertManagerProxyConfig      *proxy.Config
 	MeteringProxyConfig          *proxy.Config
+	// TODO: Drop the NamespaceLister, this is brought back just to prototype
+	// TODO: CRD lister & watcher is likely necessary
+	NamespaceLister                *ResourceLister
+	CustomResourceDefinitionLister *ResourceLister
 }
 
 func (s *Server) authDisabled() bool {
@@ -341,6 +345,14 @@ func (s *Server) versionHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		Version: version.Version,
 	})
+}
+
+func (s *Server) handleListCRDs(user *auth.User, w http.ResponseWriter, r *http.Request) {
+	s.CustomResourceDefinitionLister.handleResources(user.Token, w, r)
+}
+// TODO: eliminate this, we don't need it after testing
+func (s *Server) handleListNamespaces(user *auth.User, w http.ResponseWriter, r *http.Request) {
+	s.NamespaceLister.handleResources(user.Token, w, r)
 }
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
