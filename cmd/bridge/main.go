@@ -14,12 +14,11 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 	"github.com/coreos/pkg/flagutil"
-
 	"github.com/openshift/console/pkg/auth"
+	"github.com/openshift/console/pkg/bridge"
 	"github.com/openshift/console/pkg/proxy"
 	"github.com/openshift/console/pkg/server"
 	"github.com/openshift/console/pkg/serverconfig"
-	"github.com/openshift/console/pkg/bridge"
 )
 
 var (
@@ -413,7 +412,6 @@ func main() {
 		bridge.FlagFatalf("user-auth", "must be one of: oidc, disabled")
 	}
 
-
 	// TODO: this is a semi-silly place to put this.
 	srv.NamespaceLister = &server.ResourceLister{
 		BearerToken:   k8sAuthServiceAccountBearerToken,
@@ -436,7 +434,6 @@ func main() {
 			},
 		},
 	}
-
 
 	switch *fK8sAuth {
 	case "service-account":
@@ -479,4 +476,3 @@ func main() {
 		log.Fatal(httpsrv.ListenAndServe())
 	}
 }
-

@@ -350,6 +350,7 @@ func (s *Server) versionHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleListCRDs(user *auth.User, w http.ResponseWriter, r *http.Request) {
 	s.CustomResourceDefinitionLister.handleResources(user.Token, w, r)
 }
+
 // TODO: eliminate this, we don't need it after testing
 func (s *Server) handleListNamespaces(user *auth.User, w http.ResponseWriter, r *http.Request) {
 	s.NamespaceLister.handleResources(user.Token, w, r)

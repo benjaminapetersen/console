@@ -10,8 +10,6 @@ var (
 	plog = capnslog.NewPackageLogger("github.com/openshift/console", "bridge")
 )
 
-
-
 func ValidateFlagNotEmpty(name string, value string) string {
 	if value == "" {
 		FlagFatalf(name, "value is required")
