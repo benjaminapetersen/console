@@ -44,9 +44,15 @@ func validateAbsURL(value string) error {
 }
 
 func newOpenShiftAuth(ctx context.Context, c *openShiftConfig) (oauth2.Endpoint, *openShiftAuth, error) {
+	log.Info("newOpenshiftAuth()")
 	// Use metadata discovery to determine the OAuth2 token and authorization URL.
 	// https://docs.openshift.com/container-platform/3.9/architecture/additional_concepts/authentication.html#oauth-server-metadata
 	wellKnownURL := strings.TrimSuffix(c.issuerURL, "/") + "/.well-known/oauth-authorization-server"
+
+	log.Infof("issuer url: %v", c.issuerURL)
+
+	log.Infof("wellKnownURL: %v", wellKnownURL)
+
 
 	req, err := http.NewRequest(http.MethodGet, wellKnownURL, nil)
 	if err != nil {
@@ -64,7 +70,16 @@ func newOpenShiftAuth(ctx context.Context, c *openShiftConfig) (oauth2.Endpoint,
 			wellKnownURL, resp.Status)
 	}
 
+	log.Info("GET .well-known.....")
+	toLog, _ := json.Marshal(resp.Body) // doesn't do anything, but json.NewDecoder() below does
+	log.Infof(".well-known resp: %v", string(toLog))
+
 	var metadata struct {
+		// this will give us:
+		// https://oauth-openshift.apps.bpetersen.devcluster.openshift.com
+		// which we can use to build:
+		// https://oauth-openshift.apps.bpetersen.devcluster.openshift.com/healthz
+		// which we can ping to get an ok/not ok response
 		Issuer string `json:"issuer"`
 		Auth   string `json:"authorization_endpoint"`
 		Token  string `json:"token_endpoint"`
@@ -74,6 +89,10 @@ func newOpenShiftAuth(ctx context.Context, c *openShiftConfig) (oauth2.Endpoint,
 		return oauth2.Endpoint{}, nil, fmt.Errorf("discovery through endpoint %s failed to decode body: %v",
 			wellKnownURL, err)
 	}
+
+	toLog, _ = json.Marshal(metadata)
+	log.Infof("metadata: %v", string(toLog))
+
 
 	if err := validateAbsURL(metadata.Issuer); err != nil {
 		return oauth2.Endpoint{}, nil, err
@@ -113,6 +132,7 @@ func newOpenShiftAuth(ctx context.Context, c *openShiftConfig) (oauth2.Endpoint,
 			SpecialAuthURLs{
 				requestTokenURL,
 				kubeAdminLogoutURL,
+				metadata.Issuer,
 			},
 		}, nil
 }
@@ -186,5 +206,8 @@ func getOpenShiftUser(r *http.Request) (*User, error) {
 }
 
 func (o *openShiftAuth) getSpecialURLs() SpecialAuthURLs {
+	log.Info("openShiftAuth.GetSpecialURLs()")
+	toLog, _ := json.Marshal(o.specialURLs)
+	log.Infof("special urls: %v", string(toLog))
 	return o.specialURLs
 }

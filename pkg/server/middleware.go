@@ -3,6 +3,7 @@ package server
 import (
 	"compress/gzip"
 	"fmt"
+	"github.com/coreos/pkg/capnslog"
 	"io"
 	"net/http"
 	"strings"
@@ -10,9 +11,14 @@ import (
 	"github.com/openshift/console/pkg/auth"
 )
 
+var (
+	log = capnslog.NewPackageLogger("github.com/openshift/console", "proxy")
+)
+
 // Middleware generates a middleware wrapper for request hanlders.
 // Responds with 401 for requests with missing/invalid/incomplete token with verified email address.
 func authMiddleware(a *auth.Authenticator, hdlr http.HandlerFunc) http.Handler {
+	log.Info("authMiddleware()")
 	f := func(user *auth.User, w http.ResponseWriter, r *http.Request) {
 		hdlr.ServeHTTP(w, r)
 	}
@@ -20,7 +26,9 @@ func authMiddleware(a *auth.Authenticator, hdlr http.HandlerFunc) http.Handler {
 }
 
 func authMiddlewareWithUser(a *auth.Authenticator, handlerFunc func(user *auth.User, w http.ResponseWriter, r *http.Request)) http.Handler {
+	log.Info("authMiddlewareWithUser()")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Info("authMiddlewareWithUser~HandlerFunc()")
 		user, err := a.Authenticate(r)
 		if err != nil {
 			plog.Infof("authentication failed: %v", err)
@@ -65,6 +73,7 @@ type gzipResponseWriter struct {
 }
 
 func (w *gzipResponseWriter) Write(b []byte) (int, error) {
+	log.Info("gzipResponseWriter.Write()")
 	if !w.sniffDone {
 		if w.Header().Get("Content-Type") == "" {
 			w.Header().Set("Content-Type", http.DetectContentType(b))
@@ -76,6 +85,7 @@ func (w *gzipResponseWriter) Write(b []byte) (int, error) {
 
 // gzipHandler wraps a http.Handler to support transparent gzip encoding.
 func gzipHandler(h http.Handler) http.Handler {
+	log.Info("gzipHandler()")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Accept-Encoding")
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
@@ -90,6 +100,7 @@ func gzipHandler(h http.Handler) http.Handler {
 }
 
 func securityHeadersMiddleware(hdlr http.Handler) http.HandlerFunc {
+	log.Info("securityHeadersMiddleware()")
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Prevent MIME sniffing (https://en.wikipedia.org/wiki/Content_sniffing)
 		w.Header().Set("X-Content-Type-Options", "nosniff")

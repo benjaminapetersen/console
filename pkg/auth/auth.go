@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -72,6 +73,8 @@ type SpecialAuthURLs struct {
 	RequestToken string
 	// KubeAdminLogout is the logout URL for the special kube:admin user in OpenShift.
 	KubeAdminLogout string
+	// Issuer is the base URL for the OAuth server
+	Issuer string
 }
 
 // loginMethod is used to handle OAuth2 responses and associate bearer tokens
@@ -176,8 +179,10 @@ func NewAuthenticator(ctx context.Context, c *Config) (*Authenticator, error) {
 		maxSteps = 30
 	)
 	steps := 0
+	log.Info("NewAuthenticator()")
 
 	for {
+		log.Infof("NewAuthenticator() step: %v", steps)
 		a, err := newUnstartedAuthenticator(c)
 		if err != nil {
 			return nil, err
@@ -186,6 +191,7 @@ func NewAuthenticator(ctx context.Context, c *Config) (*Authenticator, error) {
 		var authSourceFunc func() (oauth2.Endpoint, loginMethod, error)
 		switch c.AuthSource {
 		case AuthSourceOpenShift:
+			log.Info("case:AuthOpenshift")
 			a.userFunc = getOpenShiftUser
 			authSourceFunc = func() (oauth2.Endpoint, loginMethod, error) {
 				// Use the k8s CA for OAuth metadata discovery.
@@ -204,6 +210,7 @@ func NewAuthenticator(ctx context.Context, c *Config) (*Authenticator, error) {
 				})
 			}
 		default:
+			log.Info("case:default")
 			// OIDC auth source is stateful, so only create it once.
 			endpoint, oidcAuthSource, err := newOIDCAuth(ctx, &oidcConfig{
 				client:        a.clientFunc(),
@@ -246,6 +253,9 @@ func NewAuthenticator(ctx context.Context, c *Config) (*Authenticator, error) {
 				Scopes:       c.Scope,
 				Endpoint:     fallbackEndpoint,
 			}
+
+			toLog, _ := json.Marshal(baseOAuth2Config)
+			log.Infof("oauth 2 config: %v", string(toLog))
 
 			currentEndpoint, currentLoginMethod, errAuthSource := authSourceFunc()
 			if errAuthSource != nil {
@@ -314,11 +324,15 @@ type User struct {
 }
 
 func (a *Authenticator) Authenticate(r *http.Request) (*User, error) {
+	log.Infof("Authenticator.Authenticate()")
 	return a.userFunc(r)
 }
 
 // LoginFunc redirects to the OIDC provider for user login.
 func (a *Authenticator) LoginFunc(w http.ResponseWriter, r *http.Request) {
+
+	log.Info("Authenticator.LoginFunc()")
+
 	var randData [4]byte
 	if _, err := io.ReadFull(rand.Reader, randData[:]); err != nil {
 		panic(err)
@@ -331,6 +345,9 @@ func (a *Authenticator) LoginFunc(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   a.secureCookies,
 	}
+
+	toLog, _ := json.Marshal(cookie)
+	log.Infof("cookie: %v", string(toLog))
 	http.SetCookie(w, &cookie)
 	http.Redirect(w, r, a.getOAuth2Config().AuthCodeURL(state), http.StatusSeeOther)
 }
@@ -342,12 +359,14 @@ func (a *Authenticator) LogoutFunc(w http.ResponseWriter, r *http.Request) {
 
 // GetKubeAdminLogoutURL returns the logout URL for the special kube:admin user in OpenShift
 func (a *Authenticator) GetSpecialURLs() SpecialAuthURLs {
+	log.Info("Authenticator.GetSpecialURLs()")
 	return a.getLoginMethod().getSpecialURLs()
 }
 
 // CallbackFunc handles OAuth2 callbacks and code/token exchange.
 // Requests with unexpected params are redirected to the root route.
 func (a *Authenticator) CallbackFunc(fn func(loginInfo LoginJSON, successURL string, w http.ResponseWriter)) func(w http.ResponseWriter, r *http.Request) {
+	log.Info("Authenticator.CallbackFunc()")
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		qErr := q.Get("error")
@@ -400,16 +419,19 @@ func (a *Authenticator) CallbackFunc(fn func(loginInfo LoginJSON, successURL str
 }
 
 func (a *Authenticator) getOAuth2Config() *oauth2.Config {
+	log.Info("Authenticator.getOAuth2Config()")
 	oauthConfig, _ := a.authFunc()
 	return oauthConfig
 }
 
 func (a *Authenticator) getLoginMethod() loginMethod {
+	log.Info("Authenticator.getLoginMethod()")
 	_, lm := a.authFunc()
 	return lm
 }
 
 func (a *Authenticator) redirectAuthError(w http.ResponseWriter, authErr string, err error) {
+	log.Info("Authenticator.redirectAuthError()")
 	var u url.URL
 	up, err := url.Parse(a.errorURL)
 	if err != nil {
@@ -429,6 +451,7 @@ func (a *Authenticator) redirectAuthError(w http.ResponseWriter, authErr string,
 }
 
 func (a *Authenticator) getSourceOrigin(r *http.Request) string {
+	log.Info("Authenticator.getSourceOrigin()")
 	origin := r.Header.Get("Origin")
 	if len(origin) != 0 {
 		return origin
@@ -440,6 +463,7 @@ func (a *Authenticator) getSourceOrigin(r *http.Request) string {
 // VerifySourceOrigin checks that the Origin request header, if present, matches the target origin. Otherwise, it checks the Referer request header.
 // https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Identifying_Source_Origin
 func (a *Authenticator) VerifySourceOrigin(r *http.Request) (err error) {
+	log.Info("Authenticator.VerifySourceOrigin()")
 	source := a.getSourceOrigin(r)
 	if len(source) == 0 {
 		return fmt.Errorf("no Origin or Referer header in request")
@@ -463,6 +487,7 @@ func (a *Authenticator) VerifySourceOrigin(r *http.Request) (err error) {
 }
 
 func (a *Authenticator) SetCSRFCookie(path string, w *http.ResponseWriter) {
+	log.Info("Authenticator.SetCSRFCookie()")
 	cookie := http.Cookie{
 		Name:  CSRFCookieName,
 		Value: randomString(64),
@@ -475,6 +500,7 @@ func (a *Authenticator) SetCSRFCookie(path string, w *http.ResponseWriter) {
 }
 
 func (a *Authenticator) VerifyCSRFToken(r *http.Request) (err error) {
+	log.Info("Authenticator.VerifyCSRFToken()")
 	CSRFToken := r.Header.Get(CSRFHeader)
 	CRSCookie, err := r.Cookie(CSRFCookieName)
 	if err != nil {
@@ -492,6 +518,7 @@ func (a *Authenticator) VerifyCSRFToken(r *http.Request) (err error) {
 }
 
 func NewDexClient(hostAndPort string, caCrt, clientCrt, clientKey string) (api.DexClient, error) {
+	log.Info("NextDexClient()")
 	clientCert, err := tls.LoadX509KeyPair(clientCrt, clientKey)
 	if err != nil {
 		return nil, fmt.Errorf("invalid client crt file: %s", err)
@@ -516,6 +543,10 @@ func NewDexClient(hostAndPort string, caCrt, clientCrt, clientKey string) (api.D
 		RootCAs:      certPool,
 		Certificates: []tls.Certificate{clientCert},
 	}
+
+	toLog, _ := json.Marshal(clientTLSConfig)
+	log.Info("client tls config: %v", toLog)
+
 	creds := credentials.NewTLS(clientTLSConfig)
 
 	conn, err := grpc.Dial(hostAndPort, grpc.WithTransportCredentials(creds))

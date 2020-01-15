@@ -133,5 +133,8 @@ func (o *oidcAuth) authenticate(r *http.Request) (*User, error) {
 }
 
 func (o *oidcAuth) getSpecialURLs() SpecialAuthURLs {
+	log.Info("openShiftAuth.GetSpecialURLs()")
+	toLog, _ := json.Marshal(SpecialAuthURLs{})
+	log.Infof("special urls: %v", toLog)
 	return SpecialAuthURLs{}
 }

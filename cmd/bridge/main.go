@@ -414,12 +414,12 @@ func main() {
 		var (
 			err                      error
 			userAuthOIDCIssuerURL    *url.URL
-			authLoginErrorEndpoint   = proxy.SingleJoiningSlash(srv.BaseURL.String(), server.AuthLoginErrorEndpoint)
-			authLoginSuccessEndpoint = proxy.SingleJoiningSlash(srv.BaseURL.String(), server.AuthLoginSuccessEndpoint)
-			oidcClientSecret         = *fUserAuthOIDCClientSecret
+			authLoginErrorEndpoint= proxy.SingleJoiningSlash(srv.BaseURL.String(), server.AuthLoginErrorEndpoint)
+			authLoginSuccessEndpoint= proxy.SingleJoiningSlash(srv.BaseURL.String(), server.AuthLoginSuccessEndpoint)
+			oidcClientSecret= *fUserAuthOIDCClientSecret
 			// Abstraction leak required by NewAuthenticator. We only want the browser to send the auth token for paths starting with basePath/api.
-			cookiePath  = proxy.SingleJoiningSlash(srv.BaseURL.Path, "/api/")
-			refererPath = srv.BaseURL.String()
+			cookiePath= proxy.SingleJoiningSlash(srv.BaseURL.Path, "/api/")
+			refererPath= srv.BaseURL.String()
 		)
 
 		scopes := []string{"openid", "email", "profile", "groups"}
@@ -487,7 +487,11 @@ func main() {
 
 		if srv.Auther, err = auth.NewAuthenticator(context.Background(), oidcClientConfig); err != nil {
 			log.Fatalf("Error initializing authenticator: %v", err)
+		} else {
+			log.Info("Authentication initialized. >>>>>>>> ")
+
 		}
+
 	case "disabled":
 		log.Warningf("running with AUTHENTICATION DISABLED!")
 	default:

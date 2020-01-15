@@ -110,6 +110,19 @@ func (s *Server) meteringProxyEnabled() bool {
 }
 
 func (s *Server) HTTPHandler() http.Handler {
+
+	log.Info("Server.HTTPHandler()")
+
+	toLog, _ := json.Marshal(s)
+	log.Infof("Server.HTTPHandler() ~ server: %v", string(toLog))
+
+	toLog, _ = json.Marshal(s.Auther)
+	log.Infof("Server.HTTPHandler() ~ auther: %v", string(toLog))
+
+	toLog, _ = json.Marshal(s.Auther.GetSpecialURLs())
+	log.Infof("Server.HTTPHandler() ~ getSpecialURLs(): %v", string(toLog))
+
+
 	mux := http.NewServeMux()
 
 	if len(s.BaseURL.Scheme) > 0 && len(s.BaseURL.Host) > 0 {
@@ -193,6 +206,46 @@ func (s *Server) HTTPHandler() http.Handler {
 	handleFunc("/health", health.Checker{
 		Checks: []health.Checkable{},
 	}.ServeHTTP)
+
+	// s.Auther.GetSpecialURLs()
+	handleFunc("/health/oauth", func(w http.ResponseWriter, r *http.Request) {
+
+		log.Info("/health/oauth")
+		log.Info("time to do something!")
+		issuer := s.Auther.GetSpecialURLs().Issuer
+		health := issuer + "/healthz"
+		log.Infof("issuer health: %v", health)
+
+		// TODO: resp, err := c.k8sClient.Do(req.WithContext(ctx))
+		// update & use the k8sClient and prob the x509 error will go away?
+		// resp, err := http.Get(health)
+
+		req, err := http.NewRequest(http.MethodGet, health, nil)
+		resp, err := s.K8sClient.Do(req)
+
+		if err != nil {
+			fmt.Fprintf(w, "error, %v", err)
+		}
+		defer resp.Body.Close()
+
+		toLog, _ := json.Marshal(resp.Body) // doesn't do anything, but json.NewDecoder() below does
+		log.Infof("oauth health(%v) (%v): %v", resp.StatusCode, resp.Status, string(toLog))
+
+
+
+		// TODO: need to address the x509 error here :/
+		// error, Get https://oauth-openshift.apps.bpetersen.devcluster.openshift.com/healthz:
+		// x509: certificate signed by unknown authority
+
+		// s.BaseURL.String()
+		// fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
+		fmt.Fprintf(w, "oauth health(%v) (%v): %v", resp.StatusCode, resp.Status, resp.Body)
+
+	})
+
+	handleFunc("/health/apiserver", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
+	})
 
 	k8sProxy := proxy.NewProxy(s.K8sProxyConfig)
 	handle(k8sProxyEndpoint, http.StripPrefix(
