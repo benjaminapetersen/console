@@ -1,56 +1,75 @@
 #!/usr/bin/env bash
 
-CONSOLE_URL=$(oc get console.config.openshift.io cluster --template '{{.status.consoleURL}}')
-if [ -z "${CONSOLE_URL}" ]
-then
-  echo "no console_url, are you connected to a cluster?"
-  exit 1
+set -o errexit
+set -o nounset
+set -o pipefail
+
+oc project openshift-console
+
+CONSOLEPOD=$(oc get pod -l app=console -o jsonpath="{.items[0].metadata.name}" -n openshift-console)
+CONSOLE_POD_IP=$(oc get pod "${CONSOLEPOD}" --template '{{.status.podIP}}')
+
+echo "pod ${CONSOLEPOD} at ${CONSOLE_POD_IP}"
+
+POD_NAME="test-console-ciphers"
+CONFIGMAP_NAME="${POD_NAME}"
+FILE_NAME="test-ciphers-from-pod.sh"
+FILE_PATH="/scripts"
+
+# TODO: delete this
+oc delete pod "${POD_NAME}"
+oc delete configmap "${CONFIGMAP_NAME}"
+
+# put the test script in a configmap in the console namespace
+oc create configmap "${CONFIGMAP_NAME}" --from-file="./test/${FILE_NAME}"
+
+# creates a POD to run the test script in the console namespace
+# passes $CONSOLE_POD_IP as $SERVER environment variable
+cat <<EOF | oc create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: openshift-console-test
+  name: "${POD_NAME}"
+spec:
+  restartPolicy: Never
+  containers:
+  - name: "${POD_NAME}"
+    image: quay.io/benjaminapetersen/console-ciphertest:latest
+    command: ["/bin/bash"]
+    args:
+    - ${FILE_PATH}/${FILE_NAME}
+    env:
+    - name: SERVER
+      # :8443
+      value: "${CONSOLE_POD_IP}:8443"
+    volumeMounts:
+    - name: "${CONFIGMAP_NAME}"
+      mountPath: ${FILE_PATH}
+  volumes:
+  - name: "${CONFIGMAP_NAME}"
+    configMap:
+      name: "${CONFIGMAP_NAME}"
+      defaultMode: 0755
+EOF
+
+# better than sleep
+oc wait --for=condition=complete --timeout=32s "pod/${POD_NAME}"
+
+# check the logs to see that ciphers were handled as expected
+LOGS=$(oc logs "${POD_NAME}")
+echo "${LOGS}"
+
+# clean up the pod and configmap before we exit
+oc delete pod "${POD_NAME}"
+oc delete configmap "${CONFIGMAP_NAME}"
+
+# TODO: check container status instead of a string.
+# use pod.status.containerStatuses...
+if [[ "${LOGS}" == *"success"* ]]; then
+  echo "server ciphers correctly handled"
+  exit 0
 fi
 
-# need to format the console_url for s_client
-CONSOLE_URL_WITHOUT_HTTP=${CONSOLE_URL#"https://"}
-SERVER="${CONSOLE_URL_WITHOUT_HTTP}:443"
-
-DEFAULT_INGRESS_CERT=$(oc get configmap default-ingress-cert -n openshift-config-managed -o json | jq -r '.data["ca-bundle.crt"]')
-echo "$DEFAULT_INGRESS_CERT" > /tmp/default-ingress-cert-file.txt
-
-# CIPHER=ECDHE-ECDSA-CHACHA20-POLY1305 # DENIED
-VALID_CIPHER_SAMPLE=(
-  ECDHE-RSA-AES128-GCM-SHA256
-  ECDHE-RSA-AES256-GCM-SHA384
-)
-
-for CIPHER in "${VALID_CIPHER_SAMPLE[@]}"
-do
-  if openssl s_client -connect "${SERVER}" -cipher "${CIPHER}" -CAfile /tmp/default-ingress-cert-file.txt 2>&1
-  then
-    echo "valid cipher was correctly accepted (${CIPHER})"
-  else    
-    echo "valid cipher suite was denied (${CIPHER})"
-    exit 1
-  fi
-done 
-
-
-# ensure we ignore weak ciphers
-# CBC (cipher block chaining) are no longer reliable and should not be used
-# CBC ciphers use an IV (initialization vector) and a chaining mechanism.
-# The chaining mechanism means that a single bit error in a ciphertext block
-# will invalidate all previous blocks.  The chaining was good in that it hides
-# plaintext patterns, but is inferior to other cipher modes.
-INVALID_CIPHER_SAMPLE=(
-  RSA-AES-128-CBC-SHA256
-  ECDHE-RSA-3DES-EDE-CBC-SHA    # disabled to mitigate SWEET32 attack
-  RSA-3DES-EDE-CBC-SHA          # disabled to mitigate SWEET32 attack
-)
-
-for CIPHER in "${INVALID_CIPHER_SAMPLE[@]}"
-do
-  if openssl s_client -connect "${SERVER}" -cipher "${CIPHER}" -CAfile /tmp/default-ingress-cert-file.txt 2>&1
-  then
-    echo "invalid cipher suite used to connect to console (${CIPHER})"  
-    exit 1  
-  else    
-    echo "invalid cipher was correctly denied (${CIPHER})"
-  fi
-done
+echo "server ciphers incorrectly handled"
+exit 1

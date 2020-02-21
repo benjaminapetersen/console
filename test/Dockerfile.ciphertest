@@ -1,0 +1,7 @@
+FROM alpine
+
+RUN apk update && \
+ apk add --no-cache openssl && \
+ apk add --no-cache bash && \
+ apk add --no-cache curl && \
+ rm -rf /var/cache/apk/*
