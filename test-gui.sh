@@ -12,7 +12,7 @@ then
   # look for chrome binary
   if [ -x "${CHROME_BINARY_PATH}" ];
   then
-    echo "chrmoe binary for branch ${BRANCH_BASE} already exists"
+    echo "chrome binary for branch ${BRANCH_BASE} already exists"
   else
     CHROME_DIR="${PWD}/__chrome_browser__"
     CHROME_DOWNLOAD_URL="https://www.googleapis.com/download/storage/v1/b/chromium-browser-snapshots"

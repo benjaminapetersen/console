@@ -60,7 +60,9 @@ LoadingBox.displayName = 'LoadingBox';
 
 export const EmptyBox: React.FC<EmptyBoxProps> = ({ label }) => (
   <Box>
-    <div className="text-center">{label ? `No ${label} Found` : 'Not Found'}</div>
+    <div data-test-id="empty-message" className="text-center">
+      {label ? `No ${label} Found` : 'Not Found'}
+    </div>
   </Box>
 );
 EmptyBox.displayName = 'EmptyBox';

@@ -126,11 +126,23 @@ export const ModalSubmitFooter: React.SFC<ModalSubmitFooterProps> = ({
           {cancelText || 'Cancel'}
         </Button>
         {submitDanger ? (
-          <Button type="submit" variant="danger" isDisabled={submitDisabled} id="confirm-action">
+          <Button
+            type="submit"
+            variant="danger"
+            isDisabled={submitDisabled}
+            data-test-id="confirm-action"
+            id="confirm-action"
+          >
             {submitText}
           </Button>
         ) : (
-          <Button type="submit" variant="primary" isDisabled={submitDisabled} id="confirm-action">
+          <Button
+            type="submit"
+            variant="primary"
+            isDisabled={submitDisabled}
+            data-test-id="confirm-action"
+            id="confirm-action"
+          >
             {submitText}
           </Button>
         )}

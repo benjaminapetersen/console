@@ -31,5 +31,7 @@ oc patch oauths cluster --patch "$(cat ./frontend/integration-tests/data/patch-h
 source ./chromium-version.sh
 
 ./test-gui.sh "${1:-e2e}"
-
+./test-cypress.sh
 ./test-ciphers.sh
+
+

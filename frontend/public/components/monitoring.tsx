@@ -445,7 +445,7 @@ const AlertsDetailsPage = withFallback(
         <StatusBox data={alert} label={AlertResource.label} loaded={loaded} loadError={loadError}>
           <div className="co-m-nav-title co-m-nav-title--detail">
             <h1 className="co-m-pane__heading">
-              <div className="co-resource-item">
+              <div data-test-id="resource-title" className="co-resource-item">
                 <MonitoringResourceIcon
                   className="co-m-resource-icon--lg"
                   resource={AlertResource}
@@ -530,7 +530,7 @@ const AlertsDetailsPage = withFallback(
                         <MonitoringResourceIcon resource={RuleResource} />
                         <Link
                           to={ruleURL(rule)}
-                          data-test-id="alert-detail-resource-link"
+                          data-test-id="alert-rules-detail-resource-link"
                           className="co-resource-item__resource-name"
                         >
                           {_.get(rule, 'name')}
@@ -578,7 +578,11 @@ const ActiveAlerts = ({ alerts, ruleID }) => (
       {_.sortBy(alerts, alertDescription).map((a, i) => (
         <div className="row co-resource-list__item" key={i}>
           <div className="col-xs-6">
-            <Link className="co-resource-item" to={alertURL(a, ruleID)}>
+            <Link
+              className="co-resource-item"
+              data-test-id="active-alerts"
+              to={alertURL(a, ruleID)}
+            >
               {alertDescription(a)}
             </Link>
           </div>
@@ -621,7 +625,7 @@ const AlertRulesDetailsPage = withFallback(
         <StatusBox data={rule} label={RuleResource.label} loaded={loaded} loadError={loadError}>
           <div className="co-m-nav-title co-m-nav-title--detail">
             <h1 className="co-m-pane__heading">
-              <div className="co-resource-item">
+              <div data-test-id="resource-title" className="co-resource-item">
                 <MonitoringResourceIcon
                   className="co-m-resource-icon--lg"
                   resource={RuleResource}
@@ -708,7 +712,11 @@ const SilencedAlertsList = ({ alerts }) =>
         {_.sortBy(alerts, alertDescription).map((a, i) => (
           <div className="row co-resource-list__item" key={i}>
             <div className="col-xs-9">
-              <Link className="co-resource-item" to={alertURL(a, a.rule.id)}>
+              <Link
+                className="co-resource-item"
+                data-test-id="firing-alerts"
+                to={alertURL(a, a.rule.id)}
+              >
                 {a.labels.alertname}
               </Link>
               <div className="monitoring-description">{alertDescription(a)}</div>
@@ -759,7 +767,7 @@ const SilencesDetailsPage = withFallback(
         >
           <div className="co-m-nav-title co-m-nav-title--detail">
             <h1 className="co-m-pane__heading">
-              <div className="co-resource-item">
+              <div data-test-id="resource-title" className="co-resource-item">
                 <MonitoringResourceIcon
                   className="co-m-resource-icon--lg"
                   resource={SilenceResource}

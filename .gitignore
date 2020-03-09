@@ -16,3 +16,5 @@
 /frontend/npm-debug.log
 /frontend/yarn-error.log
 /frontend/gui_test_screenshots
+/frontend/integration-tests-cypress/cypress/videos
+/frontend/integration-tests-cypress/cypress/screenshots
